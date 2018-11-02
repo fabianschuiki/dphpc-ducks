@@ -1,4 +1,5 @@
 // Copyright (c) 2018 dphpc-ducks
+#pragma once
 #include <memory>
 #include <random>
 #include <cassert>
@@ -124,11 +125,13 @@ public:
 private:
 	struct Inner {
 		T limit;
+		T max_pairs;
 		GapDistribution<T> gaps;
 		std::mt19937 rng;
 
-		Inner(T limit):
+		Inner(T limit, T max_pairs):
 			limit(limit),
+			max_pairs(max_pairs),
 			gaps(0, limit * (limit - 1)),
 			rng() {}
 	};
@@ -147,7 +150,9 @@ private:
 		#ifndef NDEBUG
 		T gaps_before = data->gaps.count();
 		#endif
-		if (data->gaps.count() >= max_index) {
+		bool max_index_reached = data->gaps.count() >= max_index;
+		bool max_pairs_reached = (data->max_pairs > 0 && data->gaps.count() >= data->max_pairs*2);
+		if (max_index_reached || max_pairs_reached) {
 			data.reset();
 			return;
 		}
@@ -192,8 +197,9 @@ private:
 
 public:
 	UniformPairs() {}
-	UniformPairs(T limit) {
-		data.reset(new Inner(limit));
+	UniformPairs(T limit): UniformPairs(limit, 0) {}
+	UniformPairs(T limit, T max_pairs) {
+		data.reset(new Inner(limit, max_pairs));
 		update();
 	}
 

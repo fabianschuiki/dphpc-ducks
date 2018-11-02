@@ -1,8 +1,8 @@
 // Copyright (c) 2018 dphpc-ducks
 #pragma once
+#include "uniform_pairs.hpp"
+
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/erdos_renyi_generator.hpp>
-#include <boost/random/linear_congruential.hpp>
 #include <random>
 
 /// A graph for which an MST may be calculated.
@@ -20,28 +20,32 @@ typedef boost::adjacency_list<
 > Graph;
 
 /// An iterator producing random weights.
+template <typename T>
 class RandomWeightIterator {
-	std::minstd_rand rng;
-	int max;
-	int value;
+	std::mt19937 rng;
+	std::uniform_int_distribution<T> dist;
+	T value;
 public:
-	RandomWeightIterator(std::minstd_rand rng, int max) : rng(rng), max(max) {
+	RandomWeightIterator(T max): dist(0, max-1) {
 		++(*this);
 	}
 
-	int operator *() const {
+	T operator *() const {
 		return value;
 	}
 
 	RandomWeightIterator& operator ++() {
-		value = rng() % max;
+		value = dist(rng);
 		return *this;
 	}
 };
 
 /// Create an Erdös-Renyi graph with V vertices and E edges and random weights.
 inline Graph generate_erdos_renyi_graph(size_t V, size_t E) {
-	typedef boost::erdos_renyi_iterator<std::minstd_rand, Graph> edge_iter;
-	std::minstd_rand rng(42);
-	return Graph(edge_iter(rng, V, E), edge_iter(), RandomWeightIterator(rng, E), V);
+	return Graph(
+		UniformPairs<size_t>(V, E),
+		UniformPairs<size_t>(),
+		RandomWeightIterator<size_t>(E),
+		V
+	);
 }
