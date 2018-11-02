@@ -1,5 +1,7 @@
 # DPHPC Project
 
+[![Build Status](https://travis-ci.org/fabianschuiki/dphpc-ducks.svg?branch=master)](https://travis-ci.org/fabianschuiki/dphpc-ducks)
+
 This is our project work for "Design of Parallel and High-Performance Computing" (263-2800-00L) at ETHZ.
 
 ## Usage
