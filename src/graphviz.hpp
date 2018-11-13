@@ -1,18 +1,23 @@
 // Copyright (c) 2018 dphpc-ducks
 #pragma once
+#include "vector_graph.hpp"
 #include <boost/graph/graphviz.hpp>
+
+/// Convert an index to an alphabetic representation.
+inline std::string cardinal_to_alphabetic(size_t i) {
+	std::string s = "";
+	do {
+		s += 'A' + (i % 26);
+		i /= 26;
+	} while (i > 0);
+	return s;
+}
 
 /// A writer that assigns letters to vertices to make reading graphs easier.
 struct VertexWriter {
 	template <class VertexOrEdge>
 	void operator()(std::ostream& out, const VertexOrEdge& v) const {
-		int i = v;
-		std::string s = "";
-		do {
-			s += 'A' + (i % 26);
-			i /= 26;
-		} while (i > 0);
-		out << "[label=\"" << s << "\"]";
+		out << "[label=\"" << cardinal_to_alphabetic(v) << "\"]";
 	}
 };
 
@@ -57,4 +62,30 @@ inline void write_graphviz(std::ostream& out, const Graph &g) {
 /// belong to its Minimum Spanning Tree.
 inline void write_graphviz(std::ostream& out, const Graph &g, const std::vector<int> &p) {
 	boost::write_graphviz(out, g, VertexWriter(), MstEdgeWriter(g, p));
+}
+
+/// Write a Graphviz representation of a vector graph, highlighting the edges
+/// that belong to its Minimum Spanning Tree.
+inline void write_graphviz(std::ostream& out, const VectorGraph &g, const std::vector<size_t> &mst) {
+	out << "graph G {\n";
+	for (size_t i = 0; i < g.vertices; ++i) {
+		out << "\t" << i << " [label=\"" << cardinal_to_alphabetic(i) << "\"];\n";
+	}
+	out << "\n";
+	for (size_t i = 0; i < g.edges.size(); ++i) {
+		const auto src = g.edges[i].first;
+		const auto dst = g.edges[i].second;
+		out << "\t" << src << " -- " << dst;
+		out << " [label=\"" << g.edges[i].weight << "\"";
+		if (!mst.empty() && (mst[src] == dst || mst[dst] == src)) {
+			out << ", color=red";
+		}
+		out << "];\n";
+	}
+	out << "}\n";
+}
+
+/// Write a Graphviz representation of a vector graph.
+inline void write_graphviz(std::ostream& out, const VectorGraph &g) {
+	write_graphviz(out, g, std::vector<size_t>());
 }
