@@ -75,6 +75,7 @@ inline void write_graphviz(std::ostream& out, const VectorGraph &g, const std::v
 	for (size_t i = 0; i < g.edges.size(); ++i) {
 		const auto src = g.edges[i].first;
 		const auto dst = g.edges[i].second;
+		if (src > dst) continue;
 		out << "\t" << src << " -- " << dst;
 		out << " [label=\"" << g.edges[i].weight << "\"";
 		if (!mst.empty() && (mst[src] == dst || mst[dst] == src)) {

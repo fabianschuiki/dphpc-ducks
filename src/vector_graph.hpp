@@ -41,6 +41,11 @@ public:
 				.second = (*edge_begin).second,
 				.weight = *weight_iter
 			});
+			edges.push_back(Edge{
+				.first = (*edge_begin).second,
+				.second = (*edge_begin).first,
+				.weight = *weight_iter
+			});
 		}
 		std::sort(edges.begin(), edges.end(), [&](const Edge &a, const Edge &b){
 			if (a.first < b.first)
@@ -60,3 +65,8 @@ public:
 		V
 	) {}
 };
+
+inline std::ostream &operator<< (std::ostream &os, const VectorGraph::Edge &e) {
+	os << "(" << e.first << " -- " << e.second << "; " << e.weight << ")";
+	return os;
+}
