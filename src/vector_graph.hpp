@@ -2,6 +2,12 @@
 #pragma once
 #include "graph.hpp"
 
+#include <fstream>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 /// An efficient graph implementation based on index vectors.
 ///
 /// Represents a graph as a vertex count and two lists: one containing pairs of
@@ -18,8 +24,18 @@ public:
 		size_t weight;
 	};
 
-	size_t vertices;
-	std::vector<Edge> edges;
+private:
+	/// The backing vector for edges in case the graph owns its memory.
+	std::vector<Edge> owned_edges;
+	/// The memory-mapped file data.
+	void *mmap_data = nullptr;
+	/// The size of the memory-mapped file data.
+	size_t mmap_size = 0;
+
+public:
+	size_t num_vertices;
+	size_t num_edges;
+	const Edge *edges = nullptr;
 
 	/// Create a new graph based on edge and weight iterators.
 	///
@@ -33,27 +49,29 @@ public:
 		EdgeIter edge_begin,
 		EdgeIter edge_end,
 		WeightIter weight_iter,
-		size_t vertices
-	): vertices(vertices) {
+		size_t num_vertices
+	): num_vertices(num_vertices) {
 		for (; edge_begin != edge_end; ++edge_begin, ++weight_iter) {
-			edges.push_back(Edge{
+			owned_edges.push_back(Edge{
 				.first = (*edge_begin).first,
 				.second = (*edge_begin).second,
 				.weight = *weight_iter
 			});
-			edges.push_back(Edge{
+			owned_edges.push_back(Edge{
 				.first = (*edge_begin).second,
 				.second = (*edge_begin).first,
 				.weight = *weight_iter
 			});
 		}
-		std::sort(edges.begin(), edges.end(), [&](const Edge &a, const Edge &b){
+		std::sort(owned_edges.begin(), owned_edges.end(), [&](const Edge &a, const Edge &b){
 			if (a.first < b.first)
 				return true;
 			if (a.first > b.first)
 				return false;
 			return a.second < b.second;
 		});
+		num_edges = owned_edges.size();
+		edges = &owned_edges[0];
 	}
 
 	/// Create an Erdös-Renyi graph with V vertices and E edges and random
@@ -64,6 +82,79 @@ public:
 		RandomWeightIterator<size_t>(E),
 		V
 	) {}
+
+	/// Create a graph based on a file on disk.
+	///
+	/// Uses mmap to efficiently map the data into memmory.
+	VectorGraph(const char *filename) {
+		// Memory map the file into memory.
+		int fd = open(filename, O_RDONLY);
+		if (fd == -1) {
+			perror("open");
+			exit(1);
+		}
+
+		struct stat fs;
+		if (fstat(fd, &fs) == -1) {
+			perror("fstat");
+			close(fd);
+			exit(1);
+		}
+
+		if (!S_ISREG(fs.st_mode)) {
+			fprintf(stderr, "not a regular file\n");
+			close(fd);
+			exit(1);
+		}
+
+		mmap_size = fs.st_size;
+		mmap_data = mmap(0, mmap_size, PROT_READ, MAP_SHARED, fd, 0);
+		if (mmap_data == MAP_FAILED) {
+			perror("mmap");
+			close(fd);
+			exit(1);
+		}
+
+		if (close(fd) == -1) {
+			perror("close");
+			exit(1);
+		}
+
+		// Parse the data.
+		size_t *ptr = (size_t *)mmap_data;
+		num_vertices = ptr[0];
+		num_edges = ptr[1];
+		edges = (const Edge *)&ptr[2];
+	}
+
+	~VectorGraph() {
+		// If data has been memory mapped, unmap it.
+		if (mmap_data) {
+			if (munmap(mmap_data, mmap_size) == -1) {
+				perror("munmap");
+				exit(1);
+			}
+			mmap_data = nullptr;
+		}
+	}
+
+	/// Write the graph to an output stream.
+	///
+	/// The file layout is as follows:
+	/// - number of vertices (size_t)
+	/// - number of edges (size_t)
+	/// - list of edges as vertex-vertex-weight triplets (3x size_t each)
+	void write(std::ostream &os) const {
+		os.write((const char *)&num_vertices, sizeof(size_t));
+		os.write((const char *)&num_edges, sizeof(size_t));
+		os.write((const char *)edges, num_edges * sizeof(Edge));
+	}
+
+	/// Write the graph to a file on disk.
+	void write(const char *filename) const {
+		std::ofstream f(filename);
+		write(f);
+	}
 };
 
 inline std::ostream &operator<< (std::ostream &os, const VectorGraph::Edge &e) {

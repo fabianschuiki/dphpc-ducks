@@ -68,11 +68,11 @@ inline void write_graphviz(std::ostream& out, const Graph &g, const std::vector<
 /// that belong to its Minimum Spanning Tree.
 inline void write_graphviz(std::ostream& out, const VectorGraph &g, const std::vector<size_t> &mst) {
 	out << "graph G {\n";
-	for (size_t i = 0; i < g.vertices; ++i) {
+	for (size_t i = 0; i < g.num_vertices; ++i) {
 		out << "\t" << i << " [label=\"" << cardinal_to_alphabetic(i) << "\"];\n";
 	}
 	out << "\n";
-	for (size_t i = 0; i < g.edges.size(); ++i) {
+	for (size_t i = 0; i < g.num_edges; ++i) {
 		const auto src = g.edges[i].first;
 		const auto dst = g.edges[i].second;
 		if (src > dst) continue;

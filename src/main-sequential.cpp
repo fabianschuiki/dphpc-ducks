@@ -49,7 +49,7 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 	std::set<VectorGraph::Edge, WeightCompare> possible_edges;
 	std::set<size_t> vertices;
 	vertices.insert(0);
-	for (size_t i = 0; i < g.edges.size() && g.edges[i].first == 0; ++i) {
+	for (size_t i = 0; i < g.num_edges && g.edges[i].first == 0; ++i) {
 		possible_edges.insert(g.edges[i]);
 	}
 	// std::cout << "INIT:\n";
@@ -70,8 +70,8 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 
 		// Remove all possible edges related to the added vertex. This gets rid
 		// of any potential intra-cluster edges.
-		size_t first_edge = std::distance(g.edges.begin(), std::lower_bound(g.edges.begin(), g.edges.end(), new_vertex, FirstVertexCompare()));
-		size_t last_edge = std::distance(g.edges.begin(), std::upper_bound(g.edges.begin(), g.edges.end(), new_vertex, FirstVertexCompare()));
+		size_t first_edge = std::distance(g.edges, std::lower_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
+		size_t last_edge = std::distance(g.edges, std::upper_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
 		// std::cout << "edges = " << first_edge << " .. " << last_edge << "\n";
 		for (size_t i = first_edge; i < last_edge; ++i) {
 			VectorGraph::Edge e = g.edges[i];
@@ -93,19 +93,18 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 int main(int argc, char **argv) {
 
 	// Parse the command line arguments.
-	if (argc != 3) {
-		std::cerr << "usage: " << argv[0] << " NUM_VERTICES NUM_EDGES\n";
+	if (argc != 2) {
+		std::cerr << "usage: " << argv[0] << " GRAPH\n";
 		return 1;
 	}
-	const int NUM_VERTICES = std::atoi(argv[1]);
-	const int NUM_EDGES = std::atoi(argv[2]);
+	const char *GRAPH = argv[1];
 	PerformanceTimer timer;
 
-	// Generate a random Erdös-Renyi graph.
-	VectorGraph g(NUM_VERTICES, NUM_EDGES);
+	// Load the graph from disk.
+	VectorGraph g(GRAPH);
 
 	// Compute the Minimum Spanning Tree using Prim's algorithm.
-	std::vector<size_t> p(g.vertices);
+	std::vector<size_t> p(g.num_vertices);
 	std::iota(p.begin(), p.end(), 0);
 	timer.tick("graph_setup");
 	prim_minimum_spanning_tree(g, &p[0]);
@@ -113,7 +112,7 @@ int main(int argc, char **argv) {
 
 	// Emit the Graphviz description of the graph and highlight the edges that
 	// belong to the MST.
-	{
+	if (g.num_vertices <= 100) {
 		std::ofstream fout("sequential_mst.gv");
 		write_graphviz(fout, g, p);
 	}
