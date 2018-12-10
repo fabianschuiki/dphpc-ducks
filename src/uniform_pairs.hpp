@@ -1,5 +1,7 @@
 // Copyright (c) 2018 dphpc-ducks
 #pragma once
+#include "maxlenrandseq.hpp"
+
 #include <memory>
 #include <random>
 #include <cassert>
@@ -248,6 +250,52 @@ public:
 	}
 };
 
+/// An implementation of uniform pairs based on a maximum length random sequence
+/// generator.
+template <typename T>
+class UniformPairsInnerC {
+public:
+	typedef std::pair<T, T> pair_t;
+
+	T limit;
+	T remaining;
+	pair_t current;
+	MaxLenRandSeq mls;
+
+	UniformPairsInnerC(T limit, T max_pairs):
+		limit(limit),
+		remaining(max_pairs > 0 ? max_pairs : limit * (limit-1) / 2),
+		mls(42, limit * (limit - 1)) {}
+
+	bool update() {
+		// Make sure we don't produce more pairs than we promised to.
+		if (remaining == 0) {
+			return false;
+		}
+		--remaining;
+
+		// Pick random numbers and split them into two, discarding samples where
+		// the first number is larger than the second one. This discards half of
+		// the sample space and thus ensures that of the two orderings of each
+		// pair only one is ever produced.
+		do {
+			T index = mls();
+			current = std::make_pair(
+				index / (limit - 1),
+				index % (limit - 1)
+			);
+		} while (current.first > current.second);
+
+		// Increment the second number by one. We ensure that the first number
+		// is always smaller than the second one. This implies that the second
+		// number must always be larger than 0. This is reflected by the sample
+		// space being `N*(N-1)`, where `N-1` needs to be compensated.
+		++current.second;
+
+		return true;
+	}
+};
+
 /// An iterator that yields a uniform distribution of unique integer pairs
 /// within a certain range. The pairs are unique in the sense that the same
 /// combination of integers is not produced twice, order not being significant.
@@ -257,7 +305,7 @@ public:
 	typedef std::pair<T, T> pair_t;
 
 private:
-	std::shared_ptr<UniformPairsInnerB<T>> data;
+	std::shared_ptr<UniformPairsInnerC<T>> data;
 
 	void update() {
 		if (!data)
@@ -276,7 +324,7 @@ public:
 	UniformPairs() {}
 	UniformPairs(T limit): UniformPairs(limit, 0) {}
 	UniformPairs(T limit, T max_pairs) {
-		data.reset(new UniformPairsInnerB<T>(limit, max_pairs));
+		data.reset(new UniformPairsInnerC<T>(limit, max_pairs));
 		update();
 	}
 
