@@ -13,4 +13,6 @@ add_executable(graphgen src/main-graphgen.cpp)
 # Unit Tests
 enable_testing()
 add_executable(test_uniform_pairs test/uniform_pairs.cpp)
+add_executable(test_maxlenrandseq test/maxlenrandseq.cpp)
 add_test(NAME uniform_pairs COMMAND test_uniform_pairs 1000)
+add_test(NAME maxlenrandseq COMMAND test_maxlenrandseq 1000000)
