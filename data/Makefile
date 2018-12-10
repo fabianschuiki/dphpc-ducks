@@ -8,4 +8,6 @@ all: \
 	er_1000000_2000000.bin
 
 er_%.bin:
-	../build/graphgen $(subst _, ,$*) $@
+	# ../build/graphgen $(subst _, ,$*) $@
+	@echo "not supported anymore"
+	false

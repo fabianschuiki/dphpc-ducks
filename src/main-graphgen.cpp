@@ -12,11 +12,12 @@ int main(int argc, char **argv) {
 
 	// Parse the command line arguments.
 	if (argc != 4) {
-		std::cerr << "usage: " << argv[0] << " NUM_VERTICES NUM_EDGES OUTPUT\n";
+		std::cerr << "usage: " << argv[0] << " NUM_VERTICES EDGE_PROB OUTPUT\n";
 		return 1;
 	}
-	const int NUM_VERTICES = std::atoi(argv[1]);
-	const int NUM_EDGES = std::atoi(argv[2]);
+	const uint64_t NUM_VERTICES = std::atoi(argv[1]);
+	const double EDGE_PROB = std::atof(argv[2]);
+	const uint64_t NUM_EDGES = NUM_VERTICES * (NUM_VERTICES-1) / 2 * EDGE_PROB;
 	const char *OUTPUT = argv[3];
 	PerformanceTimer timer;
 
