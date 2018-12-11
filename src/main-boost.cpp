@@ -63,20 +63,21 @@ public:
 int main(int argc, char **argv) {
 
 	// Parse the command line arguments.
-	if (argc != 2) {
-		std::cerr << "usage: " << argv[0] << " GRAPH\n";
+	if (argc != 3) {
+		std::cerr << "usage: " << argv[0] << " NUM_VERTICES EDGE_PROB\n";
 		return 1;
 	}
-	const char *GRAPH = argv[1];
+	const uint64_t NUM_VERTICES = std::atoi(argv[1]);
+	const double EDGE_PROB = std::atof(argv[2]);
+	const uint64_t NUM_EDGES = NUM_VERTICES * (NUM_VERTICES-1) / 2 * EDGE_PROB;
 	PerformanceTimer timer;
 
 	// Load the graph from disk and convert to a boost-compatible graph.
-	VectorGraph vg(GRAPH);
 	Graph g(
-		EdgeIter(vg.edges, vg.edges + vg.num_edges),
-		EdgeIter(vg.edges + vg.num_edges, vg.edges + vg.num_edges),
-		WeightIter(vg.edges, vg.edges + vg.num_edges),
-		vg.num_vertices
+		UniformPairs<size_t>(NUM_VERTICES, NUM_EDGES),
+		UniformPairs<size_t>(),
+		RandomWeightIterator<size_t>(NUM_EDGES),
+		NUM_VERTICES
 	);
 
 	// Compute the Minimum Spanning Tree using Prim's algorithm.
