@@ -1,6 +1,7 @@
 // Copyright (c) 2018 dphpc-ducks
 #pragma once
 #include "graph.hpp"
+#include "performance.hpp"
 
 #include <fstream>
 #include <fcntl.h>
@@ -39,30 +40,33 @@ public:
 
 	/// Create a new graph based on edge and weight iterators.
 	///
-	/// Creates a new graph with `vertices` vertices. The iterator pair
-	/// `edge_begin` and `edge_end` is used to generate edges as pairs of vertex
-	/// indices. The `weight_iter` is used to allocate weights to the each of
-	/// the edges. The edges can be emitted in any order and will be sorted for
-	/// maximum lookup efficiency.
+	/// Creates a new graph with `vertices` vertices. The `edge_iter` is used to
+	/// generate edges as pairs of vertex indices. The `weight_iter` is used to
+	/// allocate weights to the each of the edges. The edges can be emitted in
+	/// any order and will be sorted for maximum lookup efficiency.
 	template <typename EdgeIter, typename WeightIter>
 	VectorGraph(
-		EdgeIter edge_begin,
-		EdgeIter edge_end,
+		EdgeIter edge_iter,
 		WeightIter weight_iter,
-		size_t num_vertices
-	): num_vertices(num_vertices) {
-		for (; edge_begin != edge_end; ++edge_begin, ++weight_iter) {
+		size_t num_vertices,
+		size_t num_edges
+	): num_vertices(num_vertices), num_edges(num_edges) {
+		PerformanceTimer timer;
+		owned_edges.reserve(num_edges);
+		timer.tick("VectorGraph.reserve");
+		for (size_t i = 0; i < num_edges; ++i, ++edge_iter, ++weight_iter) {
 			owned_edges.push_back(Edge{
-				.first = (*edge_begin).first,
-				.second = (*edge_begin).second,
+				.first = (*edge_iter).first,
+				.second = (*edge_iter).second,
 				.weight = *weight_iter
 			});
 			owned_edges.push_back(Edge{
-				.first = (*edge_begin).second,
-				.second = (*edge_begin).first,
+				.first = (*edge_iter).second,
+				.second = (*edge_iter).first,
 				.weight = *weight_iter
 			});
 		}
+		timer.tick("VectorGraph.edges");
 		std::sort(owned_edges.begin(), owned_edges.end(), [&](const Edge &a, const Edge &b){
 			if (a.first < b.first)
 				return true;
@@ -70,7 +74,7 @@ public:
 				return false;
 			return a.second < b.second;
 		});
-		num_edges = owned_edges.size();
+		timer.tick("VectorGraph.sorting");
 		edges = &owned_edges[0];
 	}
 
@@ -78,9 +82,8 @@ public:
 	/// weights.
 	VectorGraph(size_t V, size_t E): VectorGraph(
 		UniformPairs<size_t>(V, E),
-		UniformPairs<size_t>(),
 		RandomWeightIterator<size_t>(E),
-		V
+		V, E
 	) {}
 
 	/// Create a graph based on a file on disk.
