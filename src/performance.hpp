@@ -17,10 +17,12 @@ public:
 	PerformanceTimer(std::ostream &os): start(now()), os(std::cout) {}
 	PerformanceTimer(): PerformanceTimer(std::cout) {}
 
-	void tick(const char *msg) {
+	double tick(const char *msg = nullptr) {
 		time_t end = now();
 		std::chrono::duration<double> diff = end-start;
-		os << msg << ": " << diff.count() << " s\n";
+		if (msg)
+			os << msg << ": " << diff.count() << " s\n";
 		start = now();
+		return diff.count();
 	}
 };

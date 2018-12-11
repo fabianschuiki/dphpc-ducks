@@ -349,3 +349,41 @@ public:
 		return *this;
 	}
 };
+
+/// A uniform pairs sequence generator.
+class UniformPairsSeq {
+	uint64_t limit;
+	MaxLenRandSeq mls;
+
+public:
+	typedef std::pair<uint64_t, uint64_t> pair_t;
+
+	UniformPairsSeq(uint64_t limit):
+		limit(limit),
+		mls(42, limit * (limit - 1)) {}
+
+	/// Draw the next random number from the sequence.
+	inline pair_t operator()() {
+		pair_t current;
+
+		// Pick random numbers and split them into two, discarding samples where
+		// the first number is larger than the second one. This discards half of
+		// the sample space and thus ensures that of the two orderings of each
+		// pair only one is ever produced.
+		do {
+			uint64_t index = mls();
+			current = std::make_pair(
+				index / (limit - 1),
+				index % (limit - 1)
+			);
+		} while (current.first > current.second);
+
+		// Increment the second number by one. We ensure that the first number
+		// is always smaller than the second one. This implies that the second
+		// number must always be larger than 0. This is reflected by the sample
+		// space being `N*(N-1)`, where `N-1` needs to be compensated.
+		++current.second;
+
+		return current;
+	}
+};

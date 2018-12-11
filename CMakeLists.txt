@@ -9,6 +9,7 @@ add_executable(mst-boost src/main-boost.cpp)
 
 add_executable(prim-example src/prim-example.cpp)
 add_executable(graphgen src/main-graphgen.cpp)
+add_executable(bench-graph src/bench-graph.cpp)
 
 # Unit Tests
 enable_testing()
