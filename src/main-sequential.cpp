@@ -72,6 +72,8 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 		// of any potential intra-cluster edges.
 		size_t first_edge = std::distance(g.edges, std::lower_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
 		size_t last_edge = std::distance(g.edges, std::upper_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
+		if (first_edge == last_edge)
+			break;
 		// std::cout << "edges = " << first_edge << " .. " << last_edge << "\n";
 		for (size_t i = first_edge; i < last_edge; ++i) {
 			VectorGraph::Edge e = g.edges[i];
@@ -93,15 +95,17 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 int main(int argc, char **argv) {
 
 	// Parse the command line arguments.
-	if (argc != 2) {
-		std::cerr << "usage: " << argv[0] << " GRAPH\n";
+	if (argc != 3) {
+		std::cerr << "usage: " << argv[0] << " NUM_VERTICES EDGE_PROB\n";
 		return 1;
 	}
-	const char *GRAPH = argv[1];
+	const uint64_t NUM_VERTICES = std::atoi(argv[1]);
+	const double EDGE_PROB = std::atof(argv[2]);
+	const uint64_t NUM_EDGES = NUM_VERTICES * (NUM_VERTICES-1) / 2 * EDGE_PROB;
 	PerformanceTimer timer;
 
 	// Load the graph from disk.
-	VectorGraph g(GRAPH);
+	VectorGraph g(NUM_VERTICES, NUM_EDGES);
 
 	// Compute the Minimum Spanning Tree using Prim's algorithm.
 	std::vector<size_t> p(g.num_vertices);
