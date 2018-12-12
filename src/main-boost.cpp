@@ -2,6 +2,7 @@
 #include "graph.hpp"
 #include "graphviz.hpp"
 #include "performance.hpp"
+#include "verification.hpp"
 
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
@@ -85,6 +86,10 @@ int main(int argc, char **argv) {
 	timer.tick("graph_setup");
 	prim_minimum_spanning_tree(g, &p[0]);
 	timer.tick("minimum_spanning_tree");
+
+	// Check that this is indeed a minimum spanning tree.
+	verify_minimum_spanning_tree(&p[0], g);
+	timer.tick("verification");
 
 	// Emit the Graphviz description of the graph and highlight the edges that
 	// belong to the MST.
