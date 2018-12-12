@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 	);
 
 	// Compute the Minimum Spanning Tree using Prim's algorithm.
-	std::vector<int> p(boost::num_vertices(g));
+	std::vector<size_t> p(boost::num_vertices(g));
 	timer.tick("graph_setup");
 	prim_minimum_spanning_tree(g, &p[0]);
 	timer.tick("minimum_spanning_tree");

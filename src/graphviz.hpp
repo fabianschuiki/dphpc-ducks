@@ -37,16 +37,16 @@ struct EdgeWriter {
 /// belonging to the MST in red.
 struct MstEdgeWriter {
 	const Graph &graph;
-	const std::vector<int> &mst;
+	const std::vector<size_t> &mst;
 
-	MstEdgeWriter(const Graph &graph, const std::vector<int> &mst) : graph(graph), mst(mst) {}
+	MstEdgeWriter(const Graph &graph, const std::vector<size_t> &mst) : graph(graph), mst(mst) {}
 
 	template <class VertexOrEdge>
 	void operator()(std::ostream& out, const VertexOrEdge& v) const {
 		out << "[";
 		out << "label=\"" << boost::get(boost::edge_weight_t(), graph)[v] << "\"";
-		int src = boost::source(v, graph);
-		int dst = boost::target(v, graph);
+		size_t src = boost::source(v, graph);
+		size_t dst = boost::target(v, graph);
 		if (mst[src] == dst || mst[dst] == src)
 			out << ", color=red";
 		out << "]";
@@ -60,7 +60,7 @@ inline void write_graphviz(std::ostream& out, const Graph &g) {
 
 /// Write a Graphviz representation of a graph, highlighting the edges that
 /// belong to its Minimum Spanning Tree.
-inline void write_graphviz(std::ostream& out, const Graph &g, const std::vector<int> &p) {
+inline void write_graphviz(std::ostream& out, const Graph &g, const std::vector<size_t> &p) {
 	boost::write_graphviz(out, g, VertexWriter(), MstEdgeWriter(g, p));
 }
 

@@ -10,13 +10,13 @@
 int main(int argc, char **argv) {
 
 	// Generate a fixed graph in memory.
-	typedef std::pair<int, int> E;
-	const int num_nodes = 5;
+	typedef std::pair<size_t, size_t> E;
+	const size_t num_nodes = 5;
 
 	std::vector<E> edges = {
 		E(0, 2), E(1, 3), E(1, 4), E(2, 1), E(2, 3), E(3, 4), E(4, 0)
 	};
-	std::vector<int> weights = { 1, 1, 2, 7, 3, 1, 1 };
+	std::vector<size_t> weights = { 1, 1, 2, 7, 3, 1, 1 };
 	Graph g(edges.begin(), edges.end(), &weights[0], num_nodes);
 	{
 		std::ofstream fout("example.gv");
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Compute the Minimum Spanning Tree using Prim's algorithm.
-	std::vector<int> p(boost::num_vertices(g));
+	std::vector<size_t> p(boost::num_vertices(g));
 	prim_minimum_spanning_tree(g, &p[0]);
 	{
 		std::ofstream fout("example_mst.gv");
