@@ -19,11 +19,15 @@
 /// - the list is sorted by first and then by second index
 class VectorGraph {
 public:
+	/// An edge in the graph.
 	struct Edge {
 		size_t first;
 		size_t second;
 		size_t weight;
 	};
+
+	/// A range of edges in the graph.
+	typedef std::pair<const Edge*, const Edge*> EdgeRange;
 
 private:
 	/// The backing vector for edges in case the graph owns its memory.
@@ -32,6 +36,17 @@ private:
 	void *mmap_data = nullptr;
 	/// The size of the memory-mapped file data.
 	size_t mmap_size = 0;
+
+	/// A comparator for edges to locate the edges going out of a vertex.
+	struct FirstVertexCompare {
+		bool operator()(const Edge &a, size_t b) const {
+			return a.first < b;
+		}
+
+		bool operator()(size_t a, const Edge &b) const {
+			return a < b.first;
+		}
+	};
 
 public:
 	size_t num_vertices;
@@ -157,6 +172,15 @@ public:
 	void write(const char *filename) const {
 		std::ofstream f(filename);
 		write(f);
+	}
+
+	/// Get the list of edges going out of a vertex.
+	EdgeRange
+	get_adjacent_vertices(size_t vertex) const {
+		return std::make_pair(
+			std::lower_bound(edges, edges + num_edges, vertex, FirstVertexCompare()),
+			std::upper_bound(edges, edges + num_edges, vertex, FirstVertexCompare())
+		);
 	}
 };
 

@@ -70,13 +70,12 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 
 		// Remove all possible edges related to the added vertex. This gets rid
 		// of any potential intra-cluster edges.
-		size_t first_edge = std::distance(g.edges, std::lower_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
-		size_t last_edge = std::distance(g.edges, std::upper_bound(g.edges, g.edges + g.num_edges, new_vertex, FirstVertexCompare()));
-		if (first_edge == last_edge)
+		VectorGraph::EdgeRange edges = g.get_adjacent_vertices(new_vertex);
+		if (edges.first == edges.second)
 			break;
 		// std::cout << "edges = " << first_edge << " .. " << last_edge << "\n";
-		for (size_t i = first_edge; i < last_edge; ++i) {
-			VectorGraph::Edge e = g.edges[i];
+		for (const VectorGraph::Edge *i = edges.first; i < edges.second; ++i) {
+			VectorGraph::Edge e = *i;
 			// std::cout << e << "\n";
 			if (!vertices.count(e.second))
 				possible_edges.insert(e);
