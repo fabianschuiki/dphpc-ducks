@@ -34,7 +34,7 @@ private:
 	std::vector<Edge> owned_edges;
 	/// The backing vector for the adjacency map in case the graph owns
 	/// its memory.
-	std::vector<EdgeRange> owned_adjacency_map;
+	std::vector<std::vector<Edge>> owned_adjacency_map;
 	/// The memory-mapped file data.
 	void *mmap_data = nullptr;
 	/// The size of the memory-mapped file data.
@@ -56,10 +56,6 @@ public:
 	size_t num_edges;
 	const Edge *edges = nullptr;
 
-	/// The adjacency map. Contains an entry for each vertex. Each entry lists a
-	/// range of edges associated with that vertex.
-	EdgeRange *adjacency_map = nullptr;
-
 	/// Create a new graph based on edge and weight iterators.
 	///
 	/// Creates a new graph with `vertices` vertices. The `edge_iter` is used to
@@ -77,45 +73,26 @@ public:
 
 		// Gather the edges into a list.
 		owned_edges.reserve(num_edges);
+		owned_adjacency_map.resize(num_vertices);
 		timer.tick("VectorGraph.reserve");
 		for (size_t i = 0; i < num_edges; ++i, ++edge_iter, ++weight_iter) {
-			owned_edges.push_back(Edge{
+			auto ea = Edge{
 				.first = (*edge_iter).first,
 				.second = (*edge_iter).second,
 				.weight = *weight_iter
-			});
-			owned_edges.push_back(Edge{
+			};
+			auto eb = Edge{
 				.first = (*edge_iter).second,
 				.second = (*edge_iter).first,
 				.weight = *weight_iter
-			});
+			};
+			owned_edges.push_back(ea);
+			owned_edges.push_back(eb);
+			owned_adjacency_map[ea.first].push_back(eb);
+			owned_adjacency_map[eb.first].push_back(ea);
 		}
-		timer.tick("VectorGraph.edges");
-
-		// Sort the edges for quick lookup.
-		std::sort(owned_edges.begin(), owned_edges.end(), [&](const Edge &a, const Edge &b){
-			if (a.first < b.first)
-				return true;
-			if (a.first > b.first)
-				return false;
-			return a.second < b.second;
-		});
 		edges = &owned_edges[0];
-		timer.tick("VectorGraph.sorting");
-
-		// Create the adjacency map.
-		owned_adjacency_map.resize(num_vertices);
-		const Edge *edge = edges;
-		while (edge < edges+num_edges) {
-			EdgeRange r;
-			r.first = edge;
-			while (edge < edges+num_edges && r.first->first == edge->first)
-				++edge;
-			r.second = edge;
-			owned_adjacency_map[r.first->first] = r;
-		}
-		adjacency_map = &owned_adjacency_map[0];
-		timer.tick("VectorGraph.adjacency_map");
+		timer.tick("VectorGraph.edges");
 	}
 
 	/// Create an Erdös-Renyi graph with V vertices and E edges and random
@@ -203,7 +180,8 @@ public:
 	EdgeRange
 	get_adjacent_vertices(size_t vertex) const {
 		assert(vertex < num_vertices);
-		return adjacency_map[vertex];
+		const auto &adj = owned_adjacency_map[vertex];
+		return std::make_pair(&*adj.begin(), &*adj.end());
 	}
 };
 
