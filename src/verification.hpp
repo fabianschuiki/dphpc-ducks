@@ -137,8 +137,8 @@ verify_minimum_spanning_tree(
 	// If the two sets of subgraphs don't match, emit some diagnostics as to
 	// what is missing, and where.
 	auto correct = diff_plus.empty() && diff_minus.empty();
+	std::cout << "graph has " << subgraphs.size() << " separate subgraphs\n";
 	if (!correct) {
-		std::cout << "graph has " << subgraphs.size() << " separate subgraphs\n";
 		std::cout << "mst spans " << subtrees.size() << " separate subgraphs\n";
 		std::cout << diff_minus.size() << " subgraphs not in MST, " << diff_plus.size() << " subgraphs not in graph\n";
 		for (auto &sg : diff_minus) {
