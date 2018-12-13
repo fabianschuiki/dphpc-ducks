@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 	timer.tick("minimum_spanning_tree");
 
 	// Check that this is indeed a minimum spanning tree.
-	verify_minimum_spanning_tree(&p[0], g);
+	auto correct = verify_minimum_spanning_tree(&p[0], g);
 	timer.tick("verification");
 
 	// Emit the Graphviz description of the graph and highlight the edges that
@@ -99,5 +99,5 @@ int main(int argc, char **argv) {
 	}
 	timer.tick("write_result");
 
-	return 0;
+	return !correct;
 }
