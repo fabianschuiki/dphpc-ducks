@@ -8,31 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
-/// Establishes a weight-dominant order between edges.
-struct WeightCompare {
-	bool operator()(
-		const VectorGraph::Edge &a,
-		const VectorGraph::Edge &b
-	) const {
-		if (a.weight < b.weight) return true;
-		if (a.weight > b.weight) return false;
-		if (a.first < b.first) return true;
-		if (a.first > b.first) return false;
-		return a.second < b.second;
-	}
-};
-
-/// Comparator for searching edges related to a vertex.
-struct FirstVertexCompare {
-	bool operator()(const VectorGraph::Edge &a, size_t b) const {
-		return a.first < b;
-	}
-
-	bool operator()(size_t a, const VectorGraph::Edge &b) const {
-		return a < b.first;
-	}
-};
+#include <queue>
 
 /// Computes the minimum spanning tree.
 ///
@@ -40,55 +16,57 @@ struct FirstVertexCompare {
 /// vertices. The MST is represented by storing at each location in the array
 /// the index of the connected vertex corresponding to location's vertex.
 void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
-	// std::cout << "ALL EDGES:\n";
-	// for (auto e : g.edges) {
-	// 	std::cout << e << "\n";
-	// }
+	// Initialize a bit set that tracks which vertices are not part of the MST
+	// yet.
+	boost::dynamic_bitset<size_t> untouched;
+	untouched.resize(g.num_vertices, true);
 
-	// Pick the first node. We use node 0 here for convenience, but this could
-	// be any random node in the graph.
-	std::set<VectorGraph::Edge, WeightCompare> possible_edges;
-	std::set<size_t> vertices;
-	vertices.insert(0);
-	for (size_t i = 0; i < g.num_edges && g.edges[i].first == 0; ++i) {
-		possible_edges.insert(g.edges[i]);
-	}
-	// std::cout << "INIT:\n";
-	// for (auto e : possible_edges) {
-	// 	std::cout << e << "\n";
-	// }
+	// Initialize an auxiliary structure that tracks the minimum weight leading
+	// into/out of a vertex.
+	std::vector<size_t> weights(g.num_vertices, std::numeric_limits<size_t>::max());
 
-	// Iteratively pick the lowest-weight edge out of the cluster.
-	for (size_t i = 0; i < 1000 && !possible_edges.empty(); ++i) {
-		// Pick the lowest cost edge.
-		VectorGraph::Edge edge = *possible_edges.begin();
-		size_t new_vertex = edge.second;
-		// std::cout << "ITERATION " << i << " ADD " << cardinal_to_alphabetic(edge.first) << " -- " << cardinal_to_alphabetic(edge.second) << " (" << possible_edges.size() << " possible)\n";
-		vertices.insert(new_vertex);
+	// Keep a priority queue of vertices reachable from the current blob of
+	// vertices, ordered by the corresponding edge's weight. First element of
+	// the pair is the weight, second element is the vertex id.
+	std::priority_queue<std::pair<size_t, size_t>> queue;
 
-		// Add the edge to the MST.
-		mst[edge.second] = edge.first;
+	// Keep working until all vertices have been incorporated into an MST.
+	while (untouched.any()) {
+		// Pick the next vertex that is not part of an MST.
+		size_t init = untouched.find_first();
+		untouched.reset(init);
 
-		// Remove all possible edges related to the added vertex. This gets rid
-		// of any potential intra-cluster edges.
-		VectorGraph::EdgeRange edges = g.get_adjacent_vertices(new_vertex);
-		if (edges.first == edges.second)
-			break;
-		// std::cout << "edges = " << first_edge << " .. " << last_edge << "\n";
-		for (const VectorGraph::Edge *i = edges.first; i < edges.second; ++i) {
-			VectorGraph::Edge e = *i;
-			// std::cout << e << "\n";
-			if (!vertices.count(e.second))
-				possible_edges.insert(e);
-			std::swap(e.first, e.second);
-			possible_edges.erase(e);
+		// Add that vertex to the priority queue as initial step.
+		weights[init] = std::numeric_limits<size_t>::min();
+		queue.push(std::make_pair(weights[init], init));
+
+		// Keep working possible next vertices off the priority queue.
+		while (!queue.empty()) {
+			// Pop the next item off the front of the queue.
+			auto v0 = queue.top().second;
+			queue.pop();
+
+			// Mark the vertex as discovered.
+			untouched.reset(v0);
+
+			// Check each edge leading out of v0 for possible next vertices v1.
+			auto adjacent = g.get_adjacent_vertices(v0);
+			for (auto i = adjacent.first; i != adjacent.second; ++i) {
+				auto v1 = i->second;
+				auto weight = i->weight;
+
+				// If v1 is untouched or the weight of this edge is an
+				// improvement over whatever we've seen before, update the
+				// weight and add the key to the priority queue again.
+				if (untouched[v1] && weights[v1] > weight) {
+					weights[v1] = weight;
+					queue.push(std::make_pair(weight, v1));
+
+					// Update the parent node in the MST.
+					mst[v1] = v0;
+				}
+			}
 		}
-
-		// Dump the edges left over.
-		// std::cout << "possible next edges:\n";
-		// for (auto e : possible_edges) {
-		// 	std::cout << e << "\n";
-		// }
 	}
 }
 
