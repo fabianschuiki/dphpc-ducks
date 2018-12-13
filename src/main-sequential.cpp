@@ -3,6 +3,7 @@
 #include "graphviz.hpp"
 #include "vector_graph.hpp"
 #include "performance.hpp"
+#include "verification.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -113,6 +114,10 @@ int main(int argc, char **argv) {
 	prim_minimum_spanning_tree(g, &p[0]);
 	timer.tick("minimum_spanning_tree");
 
+	// Check that this is indeed a minimum spanning tree.
+	auto correct = verify_minimum_spanning_tree(&p[0], g);
+	timer.tick("verification");
+
 	// Emit the Graphviz description of the graph and highlight the edges that
 	// belong to the MST.
 	if (g.num_vertices <= 100) {
@@ -121,5 +126,5 @@ int main(int argc, char **argv) {
 	}
 	timer.tick("write_result");
 
-	return 0;
+	return !correct;
 }
