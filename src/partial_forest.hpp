@@ -12,7 +12,7 @@ public:
 
 private:
 	std::vector<vtx_id_t> parent_ids;
-	boost::dynamic_bitset<> contains_vertices;
+	boost::dynamic_bitset<> free_vertices;
 	size_t num_vertices;
 
 	/// Determine the parent ID of a given vertex ID in this forest. Not defined if that ID is not
@@ -33,19 +33,19 @@ public:
 	/// Create an empty partial forest.
 	PartialForest(const size_t num_vertices) : num_vertices(num_vertices) {
 		parent_ids.resize(num_vertices);
-		contains_vertices.resize(num_vertices);
+		free_vertices.resize(num_vertices, true);
 	}
 
 	/// Create a partial forest by copying another one.
 	PartialForest(const PartialForest& other) :
-			contains_vertices(other.contains_vertices), num_vertices(other.num_vertices) {
+			free_vertices(other.free_vertices), num_vertices(other.num_vertices) {
 		parent_ids.resize(num_vertices);
 		std::copy(other.parent_ids.begin(), other.parent_ids.end(), parent_ids.begin());
 	}
 
 	/// Determine if this forest contains a vertex.
 	inline bool contains_vertex(const vtx_id_t& vertex_id) const {
-		return contains_vertices[vertex_id];
+		return !free_vertices[vertex_id];
 	}
 
 	/// Merge another partial forest into this one.
@@ -89,10 +89,10 @@ public:
 	/// Add a vertex to this partial forest. Not defined if this forest already contains this
 	/// vertex.
 	PartialForest& add_vertex(const vtx_id_t vertex_id, const vtx_id_t parent_id) {
-		assert(!contains_vertices[vertex_id]);
+		assert(free_vertices[vertex_id]);
 		parent_ids[vertex_id] = parent_id;
 		assert(parent_ids.size() <= num_vertices);
-		contains_vertices[vertex_id] = true;
+		free_vertices[vertex_id] = false;
 
 		return *this;
 	}
@@ -102,7 +102,7 @@ public:
 		if (num_vertices != other.num_vertices)
 			return false;
 
-		if (contains_vertices != other.contains_vertices)
+		if (free_vertices != other.free_vertices)
 			return false;
 
 		return (parent_ids == other.parent_ids);
