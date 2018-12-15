@@ -72,7 +72,7 @@ inline void write_graphviz(std::ostream& out, const VectorGraph &g, const std::v
 		out << "\t" << i << " [label=\"" << cardinal_to_alphabetic(i) << "\"];\n";
 	}
 	out << "\n";
-	for (size_t i = 0; i < g.num_edges; ++i) {
+	for (size_t i = 0; i < g.num_edges*2; ++i) {
 		const auto src = g.edges[i].first;
 		const auto dst = g.edges[i].second;
 		if (src > dst) continue;
