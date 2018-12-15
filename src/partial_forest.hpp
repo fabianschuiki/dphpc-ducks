@@ -43,6 +43,11 @@ public:
 		std::copy(other.parent_ids.begin(), other.parent_ids.end(), parent_ids.begin());
 	}
 
+	/// Return the number of vertices that this forest can hold at most.
+	size_t capacity() const {
+		return num_vertices;
+	}
+
 	/// Determine if this forest is complete.
 	bool complete() const {
 		return free_vertices.none();
