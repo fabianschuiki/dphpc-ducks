@@ -87,13 +87,26 @@ public:
 		return *this;
 	}
 
-	/// Add a vertex to this partial forest. Not defined if this forest already contains this
-	/// vertex.
-	PartialForest& add_vertex(const vtx_id_t vertex_id, const vtx_id_t parent_id) {
+	/// Stage a vertex for addition to this partial forest.  This gives the vertex a possible
+	/// parent, but does not yet commit to that parent.
+	void stage_vertex(const vtx_id_t vertex_id, const vtx_id_t parent_id) {
+		assert(vertex_id < capacity());
 		assert(free_vertices[vertex_id]);
 		parent_ids[vertex_id] = parent_id;
-		assert(parent_ids.size() <= num_vertices);
-		free_vertices[vertex_id] = false;
+	}
+
+	/// Commit vertex to this partial forest.  This marks the vertex as non-free, after which its
+	/// parent may no longer be changed.
+	void commit_vertex(const vtx_id_t vertex_id) {
+		assert(vertex_id < capacity());
+		assert(free_vertices[vertex_id]);
+		free_vertices.reset(vertex_id);
+	}
+
+	/// Add a vertex to this partial forest.  This stages and commits a vertex to a parent.
+	PartialForest& add_vertex(const vtx_id_t vertex_id, const vtx_id_t parent_id) {
+		stage_vertex(vertex_id, parent_id);
+		commit_vertex(vertex_id);
 
 		return *this;
 	}
