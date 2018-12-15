@@ -43,6 +43,11 @@ public:
 		std::copy(other.parent_ids.begin(), other.parent_ids.end(), parent_ids.begin());
 	}
 
+	/// Determine if this forest is complete.
+	bool complete() const {
+		return free_vertices.none();
+	}
+
 	/// Determine if this forest contains a vertex.
 	inline bool contains_vertex(const vtx_id_t& vertex_id) const {
 		return !free_vertices[vertex_id];
