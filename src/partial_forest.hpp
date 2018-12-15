@@ -48,6 +48,11 @@ public:
 		return !free_vertices[vertex_id];
 	}
 
+	/// Determine the next vertex that is not yet in this forest.
+	vtx_id_t next_free_vertex(vtx_id_t greater_than) const {
+		return free_vertices.find_next(greater_than);
+	}
+
 	/// Merge another partial forest into this one.
 	PartialForest& merge(const PartialForest& other) {
 		assert(num_vertices == other.num_vertices);
