@@ -15,20 +15,6 @@ private:
 	boost::dynamic_bitset<> free_vertices;
 	size_t num_vertices;
 
-	/// Determine the parent ID of a given vertex ID in this forest. Not defined if that ID is not
-	/// in this forest.
-	inline vtx_id_t parent_id(const vtx_id_t& vertex_id) const {
-		assert(contains_vertex(vertex_id));
-		return parent_ids[vertex_id];
-	}
-
-	/// Determine if a given vertex ID is the root of a tree in this forest. Not defined if that ID
-	/// is not in this forest.
-	inline bool vertex_is_root(const vtx_id_t& vertex_id) const {
-		assert(contains_vertex(vertex_id));
-		return (parent_id(vertex_id) == vertex_id);
-	}
-
 public:
 	/// Create an empty partial forest.
 	PartialForest(const size_t num_vertices) : num_vertices(num_vertices) {
@@ -110,6 +96,20 @@ public:
 		free_vertices[vertex_id] = false;
 
 		return *this;
+	}
+
+	/// Determine the parent ID of a given vertex ID in this forest. Not defined if that ID is not
+	/// in this forest.
+	inline vtx_id_t parent_id(const vtx_id_t& vertex_id) const {
+		assert(contains_vertex(vertex_id));
+		return parent_ids[vertex_id];
+	}
+
+	/// Determine if a given vertex ID is the root of a tree in this forest. Not defined if that ID
+	/// is not in this forest.
+	inline bool vertex_is_root(const vtx_id_t& vertex_id) const {
+		assert(contains_vertex(vertex_id));
+		return (parent_id(vertex_id) == vertex_id);
 	}
 
 	/// Determine if this partial forest is equal to an other.
