@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(dphpc-ducks)
 
+find_package(Boost REQUIRED)
+
 add_definitions(-Wall -std=c++11)
+include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src)
 
 add_executable(mst-sequential src/main-sequential.cpp)
