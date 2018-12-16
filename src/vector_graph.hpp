@@ -72,7 +72,7 @@ public:
 		PerformanceTimer timer;
 
 		// Gather the edges into a list.
-		owned_edges.reserve(num_edges);
+		owned_edges.reserve(num_edges*2);
 		owned_adjacency_map.resize(num_vertices);
 		timer.tick("VectorGraph.reserve");
 		for (size_t i = 0; i < num_edges; ++i, ++edge_iter, ++weight_iter) {
