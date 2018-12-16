@@ -1,6 +1,7 @@
 // Copyright (c) 2018 dphpc-ducks
 #include "partial_forest.hpp"
 #include "check_pf_merges.hpp"
+#include "pass_fail_tests.hpp"
 
 #include <iostream>
 
@@ -157,7 +158,7 @@ bool test_cyclic_partial_overlap() {
 int main(int argc, char **argv) {
 
 	// TODO: Use proper unit testing framework.
-	std::vector<bool(*)()> tests = {
+	PassFailTests tests({
 		&test_chain_full_overlap,
 		&test_chain_no_overlap,
 		&test_chain_one_non_root_node_overlap,
@@ -166,21 +167,8 @@ int main(int argc, char **argv) {
 		&test_chain_two_nodes_incl_root_overlap,
 		&test_cyclic_graph,
 		&test_cyclic_partial_overlap,
-	};
+	});
 
-	size_t n_fails = 0, n_tests = 0;
-	for (auto&& test: tests) {
-		if (!test()) {
-			std::cout << "Test " << n_tests << " failed!" << std::endl;
-			++n_fails;
-		}
-		++n_tests;
-	}
-	if (n_fails == 0) {
-		std::cout << "All " << n_tests << " tests passed." << std::endl;
-		return 0;
-	} else {
-		std::cout << n_fails << " out of " << n_tests << " tests failed!" << std::endl;
-		return 1;
-	}
+	std::cout << tests.result() << std::endl;
+	return tests.anyFail();
 }
