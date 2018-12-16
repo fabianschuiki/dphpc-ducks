@@ -28,7 +28,12 @@ void prim_minimum_spanning_tree(const VectorGraph &g, size_t *mst) {
 	// Keep a priority queue of vertices reachable from the current blob of
 	// vertices, ordered by the corresponding edge's weight. First element of
 	// the pair is the weight, second element is the vertex id.
-	std::priority_queue<std::pair<size_t, size_t>> queue;
+	typedef std::pair<size_t, size_t> weight_vtx_id_t;
+	std::priority_queue<
+		weight_vtx_id_t,
+		std::vector<weight_vtx_id_t>,
+		std::greater<weight_vtx_id_t>>
+	queue;
 
 	// Keep working until all vertices have been incorporated into an MST.
 	while (untouched.any()) {
