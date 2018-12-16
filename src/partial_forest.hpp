@@ -3,6 +3,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <iostream>
+#include <random>
 #include <sys/types.h>
 #include <vector>
 
@@ -14,12 +15,19 @@ private:
 	std::vector<vtx_id_t> parent_ids;
 	boost::dynamic_bitset<> free_vertices;
 	size_t num_vertices;
+	std::minstd_rand* rand_gen;
+
+	void init_rand() {
+		std::random_device rd;
+		rand_gen = new std::minstd_rand(rd());
+	}
 
 public:
 	/// Create an empty partial forest.
 	PartialForest(const size_t num_vertices) : num_vertices(num_vertices) {
 		parent_ids.resize(num_vertices);
 		free_vertices.resize(num_vertices, true);
+		init_rand();
 	}
 
 	/// Create a partial forest by copying another one.
@@ -27,6 +35,7 @@ public:
 			free_vertices(other.free_vertices), num_vertices(other.num_vertices) {
 		parent_ids.resize(num_vertices);
 		std::copy(other.parent_ids.begin(), other.parent_ids.end(), parent_ids.begin());
+		init_rand();
 	}
 
 	/// Return the number of vertices that this forest can hold at most.
@@ -47,6 +56,22 @@ public:
 	/// Determine the next vertex that is not yet in this forest.
 	vtx_id_t next_free_vertex(vtx_id_t greater_than) const {
 		return free_vertices.find_next(greater_than);
+	}
+
+	/// Determine a random vertex that is not yet in this forest.
+	vtx_id_t random_free_vertex(vtx_id_t min_id) const {
+		assert(min_id < capacity());
+		std::uniform_int_distribution<vtx_id_t> dist(min_id, capacity() - 1);
+		const size_t num_vertices = capacity() - min_id;
+		for (size_t trial = 0; trial < num_vertices; ++trial) {
+			const auto id = dist(*rand_gen);
+			if (free_vertices[id])
+				return id;
+		}
+		if (min_id == 0)
+			return free_vertices.find_first();
+		else
+			return next_free_vertex(min_id - 1);
 	}
 
 	/// Merge another partial forest into this one.
