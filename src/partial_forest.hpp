@@ -23,6 +23,8 @@ private:
 	}
 
 public:
+	static const auto nvtx = boost::dynamic_bitset<>::npos;
+
 	/// Create an empty partial forest.
 	PartialForest(const size_t num_vertices) : num_vertices(num_vertices) {
 		parent_ids.resize(num_vertices);
@@ -53,7 +55,8 @@ public:
 		return !free_vertices[vertex_id];
 	}
 
-	/// Determine the next vertex that is not yet in this forest.
+	/// Determine the next vertex with at least `min_id` that is not yet in this forest.  Return
+	/// `nvtx` if no such vertex exists.
 	vtx_id_t next_free_vertex(vtx_id_t min_id) const {
 		if (min_id == 0)
 			return free_vertices.find_first();
@@ -61,7 +64,8 @@ public:
 			return free_vertices.find_next(min_id - 1);
 	}
 
-	/// Determine a random vertex that is not yet in this forest.
+	/// Determine a random vertex with at least `min_id` that is not yet in this forest.  Return
+	/// `nvtx` if no such vertex exists.
 	vtx_id_t random_free_vertex(vtx_id_t min_id) const {
 		assert(min_id < capacity());
 		std::uniform_int_distribution<vtx_id_t> dist(min_id, capacity() - 1);
