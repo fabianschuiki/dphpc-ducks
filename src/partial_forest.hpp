@@ -54,8 +54,11 @@ public:
 	}
 
 	/// Determine the next vertex that is not yet in this forest.
-	vtx_id_t next_free_vertex(vtx_id_t greater_than) const {
-		return free_vertices.find_next(greater_than);
+	vtx_id_t next_free_vertex(vtx_id_t min_id) const {
+		if (min_id == 0)
+			return free_vertices.find_first();
+		else
+			return free_vertices.find_next(min_id - 1);
 	}
 
 	/// Determine a random vertex that is not yet in this forest.
@@ -71,7 +74,7 @@ public:
 		if (min_id == 0)
 			return free_vertices.find_first();
 		else
-			return next_free_vertex(min_id - 1);
+			return next_free_vertex(min_id);
 	}
 
 	/// Merge another partial forest into this one.
