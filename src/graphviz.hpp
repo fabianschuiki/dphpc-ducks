@@ -1,5 +1,6 @@
 // Copyright (c) 2018 dphpc-ducks
 #pragma once
+#include "partial_forest.hpp"
 #include "vector_graph.hpp"
 #include <boost/graph/graphviz.hpp>
 
@@ -84,6 +85,20 @@ inline void write_graphviz(std::ostream& out, const VectorGraph &g, const std::v
 		out << "];\n";
 	}
 	out << "}\n";
+}
+
+/// Write a Graphviz representation of a vector graph, highlighting the edges
+/// that belong to its Minimum Spanning Forest.
+inline void write_graphviz(std::ostream& out, const VectorGraph &g, const PartialForest &msf) {
+	std::vector<size_t> parents(msf.capacity());
+	// Copying the parent IDs is not very efficient, but Graphviz representations can anyways only
+	// be displayed for graphs with a few hundred nodes.  This way we can share code with the
+	// invoked `write_graphviz()`.
+	for (size_t i = 0; i < msf.capacity(); ++i) {
+		if (msf.contains_vertex(i))
+			parents[i] = msf.parent_id(i);
+	}
+	write_graphviz(out, g, parents);
 }
 
 /// Write a Graphviz representation of a vector graph.
