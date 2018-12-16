@@ -8,6 +8,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src)
 
 add_executable(mst-sequential src/prim_msf.cpp src/main-sequential.cpp)
+add_executable(mst-parallel src/prim_msf.cpp src/main-parallel.cpp)
 add_executable(mst-boost src/main-boost.cpp)
 
 add_executable(prim-example src/prim-example.cpp)

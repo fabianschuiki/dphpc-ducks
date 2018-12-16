@@ -11,6 +11,7 @@
 #include <fstream>
 #include <vector>
 #include <queue>
+#include <thread>
 
 /// Computes the minimum spanning forest.
 int main(int argc, char **argv) {
@@ -33,7 +34,17 @@ int main(int argc, char **argv) {
 	PartialForest msf(NUM_VERTICES);
 	timer.tick("msf_setup");
 	PrimMsf prim(g, msf);
-	prim.run(NUM_VERTICES, 0);
+	std::vector<std::thread> threads;
+	const size_t NUM_THREADS = 4;
+	for (size_t i = 0; i < NUM_THREADS; ++i) {
+		threads.emplace_back(std::thread([&](){
+			prim.run(NUM_VERTICES/NUM_THREADS, i);
+		}));
+	}
+	std::cout << "waiting for sreads\n";
+	for (auto &t : threads) {
+		t.join();
+	}
 	timer.tick("minimum_spanning_tree");
 
 	// Check that this is indeed a minimum spanning tree.
@@ -44,7 +55,7 @@ int main(int argc, char **argv) {
 	// Emit the Graphviz description of the graph and highlight the edges that
 	// belong to the MST.
 	if (g.num_vertices <= 100) {
-		std::ofstream fout("sequential_msf.gv");
+		std::ofstream fout("parallel_msf.gv");
 		write_graphviz(fout, g, msf);
 	}
 	timer.tick("write_result");

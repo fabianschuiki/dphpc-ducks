@@ -2,12 +2,7 @@
 #include "prim_msf.hpp"
 #include <queue>
 
-void prim_minimum_spanning_forest(const VectorGraph &g, PartialForest &msf, size_t n_steps, size_t offset) {
-
-	// Initialize an auxiliary structure that tracks the minimum weight leading
-	// into/out of a vertex.
-	std::vector<size_t> weights(g.num_vertices, std::numeric_limits<size_t>::max());
-
+void PrimMsf::run(size_t n_steps, size_t offset) {
 	// Keep a priority queue of vertices reachable from the current blob of
 	// vertices, ordered by the corresponding edge's weight. First element of
 	// the pair is the weight, second element is the vertex id.
@@ -47,7 +42,7 @@ void prim_minimum_spanning_forest(const VectorGraph &g, PartialForest &msf, size
 			step++;
 
 			// Check each edge leading out of v0 for possible next vertices v1.
-			auto adjacent = g.get_adjacent_vertices(v0);
+			auto adjacent = graph.get_adjacent_vertices(v0);
 			for (auto i = adjacent.first; i != adjacent.second; ++i) {
 				const auto v1 = i->first == v0 ? i->second : i->first;
 				const auto weight = i->weight;

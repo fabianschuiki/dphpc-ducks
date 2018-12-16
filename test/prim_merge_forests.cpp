@@ -12,8 +12,10 @@ bool test_single_disjoint_nodes() {
 	VectorGraph g(edges.begin(), weights.begin(), 2, 1);
 
 	PartialForest pf0(2), pf1(2);
-	prim_minimum_spanning_forest(g, pf0, 1, 0);
-	prim_minimum_spanning_forest(g, pf1, 1, 1);
+	PrimMsf prim0(g, pf0);
+	PrimMsf prim1(g, pf1);
+	prim0.run(1, 0);
+	prim1.run(1, 1);
 
 	PartialForest exp_1into0 = pf0;
 	exp_1into0.add_vertex(1, 0);
