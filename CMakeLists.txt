@@ -4,7 +4,7 @@ project(dphpc-ducks)
 add_definitions(-Wall -std=c++11)
 include_directories(src)
 
-add_executable(mst-sequential src/main-sequential.cpp)
+add_executable(mst-sequential src/prim_msf.cpp src/main-sequential.cpp)
 add_executable(mst-boost src/main-boost.cpp)
 
 add_executable(prim-example src/prim-example.cpp)
